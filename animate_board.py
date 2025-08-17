@@ -3,20 +3,20 @@ import pygame
 # --- Player Class ---
 class Player:
     def __init__(self, x, y, team, number):
-        self.x = x
-        self.y = y
+        self.x = float(x)
+        self.y = float(y)
         self.team = team
         self.number = number
         self.color = (0, 0, 255) if team == "offense" else (255, 0, 0)
         self.radius = 15
-        self.target_x = x
-        self.target_y = y
+        self.target_x = float(x)
+        self.target_y = float(y)
 
     def set_target(self, target_x, target_y):
         self.target_x = target_x
         self.target_y = target_y
 
-    def move_towards_target(self, speed=1):
+    def move_towards_target(self, speed=2):
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dist = (dx**2 + dy**2) ** 0.5
@@ -53,7 +53,7 @@ players = [
     Player(250, 450, "offense", 81),
     Player(250, 50, "offense", 52),   #WR 6-9
     Player(250, 150, "offense", 24),
-    Player(250, 350, "offense", 24),
+    Player(250, 350, "offense", 25),
 
     Player(200, 260, "offense", 52),   #QB
     Player(200, 280, "offense", 24),   #RB
@@ -93,22 +93,12 @@ te = players[8]
 qb = players[10]
 rb = players[11]
 
-
-
-
-rb.set_target(300, 300)  # where you want RB to go
-yards_to_pixels = 10
-back_distance = 3 * yards_to_pixels
-
-for i in range(5):
-    players[i].set_target(players[i].x - back_distance, players[i].y)
-
-    for i in range(50, WIDTH, 50):
+for i in range(50, WIDTH, 50):
         pygame.draw.line(screen, (255, 255, 255), (i, 0), (i, HEIGHT), 1)
 
 # --- Game Loop ---
 movement_started = False
-start_time = None  # don’t start yet
+start_time = None
 delay = 4000  # 4 seconds
 
 running = True
@@ -123,31 +113,42 @@ while running:
     for i in range(50, WIDTH, 50):
         pygame.draw.line(screen, (255, 255, 255), (i, 0), (i, HEIGHT), 1)
 
-    # Draw players
+    # Draw all players
     for player in players:
         player.draw(screen)
 
-    pygame.display.flip()
-    clock.tick(60)
-
-    # Start timer **after first frame**
+    # Start timer after first frame
     if start_time is None:
         start_time = pygame.time.get_ticks()
 
     current_time = pygame.time.get_ticks()
     if not movement_started and current_time - start_time >= delay:
         movement_started = True
-        # Set targets once
+        # Set targets for all moving players
         yards_to_pixels = 10
         back_distance = 3 * yards_to_pixels
-        for i in range(4):
+
+        # OL moves back
+        for i in range(5):
             players[i].set_target(players[i].x - back_distance, players[i].y)
-        rb.set_target(300, 300)
+
+        # WRs
+        players[5].set_target(450, 450)
+        players[6].set_target(450, 50)
+        players[7].set_target(450, 150)
+        # TE
+        players[8].set_target(550, 300)
+        # QB
+        players[10].set_target(170, 260)
+        # RB
+        players[11].set_target(300, 300)
 
     # Move players if started
     if movement_started:
-        for player in players:
-            player.move_towards_target(speed=1)
+        for i in [0,1,2,3,4,5,6,7,8,10,11]:  # only offense
+            players[i].move_towards_target(speed=1)
+
     pygame.display.flip()
     clock.tick(60)
+
 pygame.quit()
