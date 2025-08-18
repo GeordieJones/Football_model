@@ -21,8 +21,8 @@ class Player:
         dy = self.target_y - self.y
         dist = (dx**2 + dy**2) ** 0.5
         if dist > speed:  # normalize and step
-            self.x += int(dx / dist * speed)
-            self.y += int(dy / dist * speed)
+            self.x += (dx / dist * speed)
+            self.y += (dy / dist * speed)
         else:  # snap to target if close enough
             self.x, self.y = self.target_x, self.target_y
 
@@ -90,8 +90,8 @@ wr2 = players[6]
 wr3 = players[7]
 te = players[8]
 
-qb = players[10]
-rb = players[11]
+qb = players[9]
+rb = players[10]
 
 for i in range(50, WIDTH, 50):
         pygame.draw.line(screen, (255, 255, 255), (i, 0), (i, HEIGHT), 1)
@@ -139,13 +139,13 @@ while running:
         # TE
         players[8].set_target(550, 300)
         # QB
-        players[10].set_target(170, 260)
+        players[9].set_target(170, 260)
         # RB
-        players[11].set_target(300, 300)
+        players[10].set_target(300, 300)
 
     # Move players if started
     if movement_started:
-        for i in [0,1,2,3,4,5,6,7,8,10,11]:  # only offense
+        for i in [0,1,2,3,4,5,6,7,8,9,10]:  # only offense
             players[i].move_towards_target(speed=1)
 
     pygame.display.flip()
