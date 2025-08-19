@@ -15,7 +15,23 @@ class Player:
         self.target_x, self.target_y = self.target_list[0]  # first route point
         self.finished = False
 
-    def run_route(self, speed=1):
+    def set_target(self, x, y):
+        self.target_x = x
+        self.target_y = y
+
+    def move_towards_target(self, speed=1):
+        dx = self.target_x - self.x
+        dy = self.target_y - self.y
+        dist = (dx**2 + dy**2) ** 0.5
+
+        if dist > 0:
+            step_x = speed * dx / dist
+            step_y = speed * dy / dist
+
+            self.x += step_x
+            self.y += step_y
+
+    def run_route(self, speed=1.1):
         if self.finished:
             return  # nothing left to do
 
@@ -52,9 +68,10 @@ class ManPlayer(Player):
     def assign(self, offensive_player):
         self.assignment = offensive_player
 
-    def track(self):
+
+    def track(self, speed=1):
         self.set_target(self.assignment.x, self.assignment.y)
-        self.move_towards_target()
+        self.move_towards_target(speed=speed)
         
 
 
@@ -68,41 +85,6 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Football Marker Board")
 clock = pygame.time.Clock()
 
-# --- Players: Shotgun formation vs. 2-high defense ---
-'''offensive_players = [
-    Player(250, 260, "offense", 12),    #OL 1-5
-    Player(240, 240, "offense", 80),
-    Player(230, 220, "offense", 81),
-    Player(240, 280, "offense", 52),
-    Player(230, 300, "offense", 24),
-
-    Player(250, 450, "offense", 81),
-    Player(250, 50, "offense", 52),   #WR 6-9
-    Player(250, 150, "offense", 24),
-    Player(250, 350, "offense", 25),
-
-    Player(200, 260, "offense", 52),   #QB
-    Player(200, 280, "offense", 24),   #RB
-
-
-    # Defense
-    Player(280, 300, "defense", 12),    #OL 1-5
-    Player(280, 240, "defense", 80),
-    Player(280, 220, "defense", 81),
-    Player(280, 280, "defense", 52),
-
-    Player(350, 250, "defense", 52),
-
-
-
-    ManPlayer(280, 450, "defense", 81),
-    ManPlayer(280, 50, "defense", 52),   #WR 6-9
-    ManPlayer(280, 150, "defense", 24),
-    ManPlayer(280, 350, "defense", 24),
-
-    ManPlayer(450, 350, "defense", 35),   #safteys
-    ManPlayer(450, 150, "defense", 15)
-]'''
 
 offensive_players = [
     Player(250, 260, [(250, 260)], "offense", 12),    #OL 1-5
@@ -111,13 +93,13 @@ offensive_players = [
     Player(240, 280, [(240, 280)], "offense", 52),
     Player(230, 300, [(230, 300)], "offense", 24),
 
-    Player(250, 450, [(250, 450), (400, 450)], "offense", 81),  # WR route example
-    Player(250, 50,  [(250, 50),  (400, 100)], "offense", 52),
-    Player(250, 150, [(250, 150), (400, 200)], "offense", 24),
-    Player(250, 350, [(250, 350), (400, 300)], "offense", 25),
+    Player(250, 450, [(250, 450), (400, 450),(400, 80)], "offense", 81),  # WR route example
+    Player(250, 50,  [(250, 50),  (400, 100),(500, 250)], "offense", 52),
+    Player(250, 150, [(250, 150), (400, 200),(300, 180)], "offense", 24),
+    Player(250, 350, [(250, 350), (400, 300),(600, 450)], "offense", 25),
 
-    Player(200, 260, [(200, 260)], "offense", 52),   #QB (stationary for now)
-    Player(200, 280, [(200, 280), (220, 280)], "offense", 24),   #RB small move
+    Player(200, 260, [(170, 260)], "offense", 52),   #QB (stationary for now)
+    Player(200, 280, [(200, 280), (210, 30), (500, 30)], "offense", 24),   #RB small move
 
 
     # Defense
@@ -147,86 +129,4 @@ ol5 = offensive_players[4]
 
 wr1 = offensive_players[5]
 wr2 = offensive_players[6]
-wr3 = offensive_players[7]
-te = offensive_players[8]
-
-qb = offensive_players[9]
-rb = offensive_players[10]
-
-for i in range(50, WIDTH, 50):
-        pygame.draw.line(screen, (255, 255, 255), (i, 0), (i, HEIGHT), 1)
-
-# --- Game Loop ---
-movement_started = False
-start_time = None
-delay = 4000  # 4 seconds
-
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    screen.fill((0, 128, 0))  # green field
-
-    # Draw yard lines
-    for i in range(50, WIDTH, 50):
-        pygame.draw.line(screen, (255, 255, 255), (i, 0), (i, HEIGHT), 1)
-
-    # Draw all players
-    for player in offensive_players:
-        player.draw(screen)
-
-    # Start timer after first frame
-    if start_time is None:
-        start_time = pygame.time.get_ticks()
-
-    current_time = pygame.time.get_ticks()
-    if not movement_started and current_time - start_time >= delay:
-        movement_started = True
-        # Set targets for all moving players
-        yards_to_pixels = 10
-        back_distance = 3 * yards_to_pixels
-
-        # --- Assign Man Coverage ---
-        offensive_WRs = [offensive_players[5], offensive_players[6], offensive_players[7], offensive_players[8]]
-        defenders = [offensive_players[16], offensive_players[17], offensive_players[18], offensive_players[19]]
-
-        for d, wr in zip(defenders, offensive_WRs):
-            d.assign(wr)
-
-            # Safeties follow WRs too (example: deep help)
-        offensive_players[20].assign(offensive_players[5])  # safety on WR1
-        offensive_players[21].assign(offensive_players[6])  # safety on WR2
-
-
-        # OL moves back
-        for i in range(5):
-            offensive_players[i].set_target(offensive_players[i].x - back_distance, offensive_players[i].y)
-
-        # WRs
-        offensive_players[5].set_target(450, 450)
-        offensive_players[6].set_target(450, 50)
-        offensive_players[7].set_target(450, 150)
-        # TE
-        offensive_players[8].set_target(550, 300)
-        # QB
-        offensive_players[9].set_target(170, 260)
-        # RB
-        offensive_players[10].set_target(300, 300)
-
-    # Move players if started
-    if movement_started:
-        for i in [0,1,2,3,4,5,6,7,8,9,10]:  # only offense
-            offensive_players[i].move_towards_target(speed=1.1)
-
-
-        for i in [16,17,18,19,20,21]:
-            defensive_player = offensive_players[i]
-            if isinstance(defensive_player, ManPlayer):
-                defensive_player.track()
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
+wr3 = offensive_players
