@@ -129,4 +129,79 @@ ol5 = offensive_players[4]
 
 wr1 = offensive_players[5]
 wr2 = offensive_players[6]
-wr3 = offensive_players
+wr3 = offensive_players[7]
+te = offensive_players[8]
+
+qb = offensive_players[9]
+rb = offensive_players[10]
+
+for i in range(50, WIDTH, 50):
+        pygame.draw.line(screen, (255, 255, 255), (i, 0), (i, HEIGHT), 1)
+
+# --- Game Loop ---
+movement_started = False
+start_time = None
+delay = 4000  # 4 seconds
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    screen.fill((0, 128, 0))  # green field
+
+    # Draw yard lines
+    for i in range(50, WIDTH, 50):
+        pygame.draw.line(screen, (255, 255, 255), (i, 0), (i, HEIGHT), 1)
+
+    # Draw all players
+    for player in offensive_players:
+        player.draw(screen)
+
+    # Start timer after first frame
+    if start_time is None:
+        start_time = pygame.time.get_ticks()
+
+    current_time = pygame.time.get_ticks()
+    if not movement_started and current_time - start_time >= delay:
+        movement_started = True
+        # Set targets for all moving players
+        yards_to_pixels = 10
+        back_distance = 3 * yards_to_pixels
+
+        # --- Assign Man Coverage ---
+        offensive_WRs = [offensive_players[5], offensive_players[6], offensive_players[7], offensive_players[8]]
+        defenders = [offensive_players[16], offensive_players[17], offensive_players[18], offensive_players[19]]
+
+        for d, wr in zip(defenders, offensive_WRs):
+            d.assign(wr)
+
+            # Safeties follow WRs too (example: deep help)
+        offensive_players[20].assign(offensive_players[5])  # safety on WR1
+        offensive_players[21].assign(offensive_players[6])  # safety on WR2
+
+
+        # OL moves back
+        for i in range(5):
+            offensive_players[i].set_target(offensive_players[i].x - back_distance, offensive_players[i].y)
+
+
+    # Move players if started
+    if movement_started:
+        for i in [0,1,2,3,4]:  # only offense
+            offensive_players[i].move_towards_target(speed=1.1)
+
+        for i in [5,6,7,8,9,10]:
+            offensive_players[i].run_route(speed=1.1)
+
+
+        for i in [16,17,18,19,20,21]:
+            defensive_player = offensive_players[i]
+            if isinstance(defensive_player, ManPlayer):
+                defensive_player.track()
+
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
